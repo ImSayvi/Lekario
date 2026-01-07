@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('doctor_id')->constrained();
             $table->foreignId('patient_id')->constrained();
             $table->dateTime('visit_date');
+            $table->text('notes');
 
         });
     }
