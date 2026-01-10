@@ -257,10 +257,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderCalendar() {
         const calendar = document.getElementById('calendar');
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Ustaw na początek dnia
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
-        let html = '<div class="grid grid-cols-7 gap-2">';
+        // Dodaj nagłówek z nazwą miesiąca
+        const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 
+                           'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+        
+        let html = `<div class="text-center mb-4">
+                        <h4 class="text-lg font-semibold text-gray-700">${monthNames[currentMonth]} ${currentYear}</h4>
+                    </div>`;
+        
+        html += '<div class="grid grid-cols-7 gap-2">';
         
         // Nagłówki dni tygodnia
         const days = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
@@ -282,9 +291,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(currentYear, currentMonth, day);
-            const dateStr = date.toISOString().split('T')[0];
+            date.setHours(0, 0, 0, 0);
+            
+            // Format daty YYYY-MM-DD w lokalnej strefie czasowej
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${dayStr}`;
+            
             const isAvailable = availableDates.includes(dateStr);
-            const isPast = date < today.setHours(0, 0, 0, 0);
+            const isPast = date < today;
 
             let classes = 'calendar-day ';
             if (isPast) {
