@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=" https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&text=🩺%20Lekario&reversal=true&descAlign=50 " width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&text=🩺%20Lekario" width="100%"/>
 
 ### Nowoczesny System Zarządzania Przychodnią
 
