@@ -53,6 +53,198 @@
     </div>
 </div>
 
+<!-- Trwająca wizyta - wstaw PRZED sekcją "Wizyty do zaakceptowania" -->
+@if($activeVisit)
+<div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg border border-blue-400 mb-8">
+    <div class="p-6 border-b border-blue-400">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-7 h-7 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white">Trwająca wizyta</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-white font-medium">W trakcie</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="p-6">
+        <!-- Informacje o pacjencie -->
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
+                        {{ strtoupper(substr($activeVisit->patient->user->first_name, 0, 1)) }}{{ strtoupper(substr($activeVisit->patient->user->last_name, 0, 1)) }}
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">{{ $activeVisit->patient->user->full_name }}</h3>
+                        <div class="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                            <span>PESEL: {{ $activeVisit->patient->pesel }}</span>
+                            @if($activeVisit->patient->user->phone)
+                            <span>Tel: {{ $activeVisit->patient->user->phone }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-600">Rozpoczęcie</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ \Carbon\Carbon::parse($activeVisit->start_time)->format('H:i') }}</p>
+                    <p class="text-sm text-gray-600 mt-2">Zakończenie</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ \Carbon\Carbon::parse($activeVisit->end_time)->format('H:i') }}</p>
+                </div>
+            </div>
+
+            @if($activeVisit->notes)
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p class="text-sm font-medium text-amber-900 mb-1">Notatki do wizyty:</p>
+                <p class="text-sm text-amber-800">{{ $activeVisit->notes }}</p>
+            </div>
+            @endif
+        </div>
+
+        <!-- Akcje - Recepta i Skierowanie -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Wystawianie recepty -->
+            <div class="bg-white rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Wystaw receptę</h3>
+                </div>
+
+                <form action="{{ route('doctor.visits.prescription.store', $activeVisit) }}" method="POST">
+                    @csrf
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nazwa leku *</label>
+                            <input type="text" name="medication_name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                   placeholder="np. Amoksycylina 500mg">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kod leku</label>
+                            <input type="text" name="medication_code"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                   placeholder="np. EAN, kod producenta">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dawkowanie</label>
+                            <textarea name="dosage" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                      placeholder="np. 1 tabletka 3 razy dziennie"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ilość opakowań *</label>
+                                <input type="number" name="quantity" min="1" value="1" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Odpłatność *</label>
+                                <select name="is_refundable" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                    <option value="1">Refundowane</option>
+                                    <option value="0">Pełna odpłatność</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Uwagi</label>
+                            <textarea name="notes" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                      placeholder="Dodatkowe informacje..."></textarea>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition">
+                            Wystaw receptę
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wystawianie skierowania -->
+            <div class="bg-white rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Wystaw skierowanie</h3>
+                </div>
+
+                <form action="{{ route('doctor.visits.referral.store', $activeVisit) }}" method="POST">
+                    @csrf
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Typ skierowania *</label>
+                            <select name="type" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Wybierz...</option>
+                                <option value="examination">Badanie</option>
+                                <option value="specialist">Lekarz specjalista</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Skierowanie na *</label>
+                            <input type="text" name="referral_to" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="np. RTG klatki piersiowej lub Kardiolog">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rozpoznanie / Uzasadnienie</label>
+                            <textarea name="diagnosis" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Powód wystawienia skierowania..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Uwagi</label>
+                            <textarea name="notes" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Dodatkowe informacje..."></textarea>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                            Wystaw skierowanie
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Przycisk zakończenia wizyty -->
+        <div class="mt-6">
+            <form action="{{ route('doctor.visits.complete', $activeVisit) }}" method="POST" 
+                  onsubmit="return confirm('Czy na pewno chcesz zakończyć tę wizytę?')">
+                @csrf
+                <button type="submit"
+                        class="w-full px-6 py-3 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition border-2 border-white">
+                    ✓ Zakończ wizytę
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Wizyty oczekujące na akceptację -->
 @if($pendingVisits->count() > 0)
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">

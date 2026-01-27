@@ -4,20 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Visit extends Model
+class Referral extends Model
 {
     protected $fillable = [
         'doctor_id',
         'patient_id',
-        'start_time',
-        'end_time',
-        'status',
-        'notes'
+        'visit_id',
+        'type',
+        'referral_to',
+        'diagnosis',
+        'notes',
+        'issue_date',
+        'valid_until',
     ];
 
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'issue_date' => 'date',
+        'valid_until' => 'date',
     ];
 
     public function doctor()
@@ -30,13 +33,8 @@ class Visit extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function prescriptions()
+    public function visit()
     {
-        return $this->hasMany(Prescription::class);
-    }
-
-    public function referrals()
-    {
-        return $this->hasMany(Referral::class);
+        return $this->belongsTo(Visit::class);
     }
 }
