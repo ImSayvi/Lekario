@@ -24,16 +24,6 @@ class Doctor extends Model
         return $this->hasMany(Visit::class);
     }
 
-    public function prescriptions()
-    {
-        return $this->hasMany(Prescription::class);
-    }
-
-    public function referrals()
-    {
-        return $this->hasMany(Referral::class);
-    }
-
 public function getAvailableSlotsForDate($date)
 {
     // Parsuj datę w strefie czasowej Europe/Warsaw

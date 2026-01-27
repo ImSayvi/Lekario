@@ -26,10 +26,6 @@ class User extends Authenticatable
         'password',
     ];
 
-    const STATUS_VERIFY = 'VERIFY';
-    const STATUS_ACTIVE = 'ACTIVE';
-    const STATUS_INACTIVE = 'INACTIVE';
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -71,55 +67,5 @@ class User extends Authenticatable
     public function doctor()
     {
         return $this->hasOne(Doctor::class);
-    }
-
-    public function admin()
-    {
-        return $this->hasOne(Admin::class);
-    }
-
-    /**
-     * Sprawdź czy użytkownik jest adminem
-     */
-    public function isAdmin(): bool
-    {
-        return $this->admin !== null;
-    }
-
-    public function canLogin(): bool
-        {
-            return $this->status === self::STATUS_ACTIVE;
-        }
-
-    /**
- * Sprawdź czy użytkownik czeka na weryfikację
- */
-    public function isPending(): bool
-    {
-        return $this->status === self::STATUS_VERIFY;
-    }
-
-    /**
-     * Sprawdź czy użytkownik jest aktywny
-     */
-    public function isActive(): bool
-    {
-        return $this->status === self::STATUS_ACTIVE;
-    }
-
-    /**
-     * Aktywuj użytkownika
-     */
-    public function activate()
-    {
-        $this->update(['status' => self::STATUS_ACTIVE]);
-    }
-
-    /**
-     * Dezaktywuj użytkownika
-     */
-    public function deactivate()
-    {
-        $this->update(['status' => self::STATUS_INACTIVE]);
     }
 }

@@ -10,7 +10,7 @@ return new class extends Migration {
             $table->dropColumn('visit_date'); // usuwamy stare visit_date
             $table->dateTime('start_time')->after('patient_id');
             $table->dateTime('end_time')->after('start_time');
-            // $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending')->after('end_time');
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending')->after('end_time');
         });
     }
 
