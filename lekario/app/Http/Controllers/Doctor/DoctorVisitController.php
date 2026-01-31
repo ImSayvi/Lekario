@@ -67,11 +67,14 @@ class DoctorVisitController extends Controller
             abort(403, 'Nie masz uprawnień do tej wizyty.');
         }
         
-        $visit->load('patient.user');
+        $visit->load([
+            'patient.user',
+            'prescriptions',  // Dodaj to
+            'referrals'       // Dodaj to
+        ]);
         
         return view('doctor.visits.show', compact('visit'));
     }
-    
     public function complete(Visit $visit)
     {
         // Sprawdź czy to wizyta tego lekarza
@@ -83,4 +86,109 @@ class DoctorVisitController extends Controller
         
         return redirect()->back()->with('success', 'Wizyta została oznaczona jako zakończona.');
     }
+
+       // === RECEPTY ===
+    
+    public function storePrescription(Request $request, Visit $visit)
+    {
+        // Sprawdź czy to wizyta tego lekarza
+        if ($visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tej wizyty.');
+        }
+        
+        $validated = $request->validate([
+            'medication_name' => 'required|string|max:255',
+            'medication_code' => 'nullable|string|max:50',
+            'dosage' => 'nullable|string|max:500',
+            'quantity' => 'required|integer|min:1',
+            'is_refundable' => 'required|boolean',
+        ]);
+        
+        $visit->prescriptions()->create($validated);
+        
+        return redirect()->back()->with('success', 'Recepta została wystawiona.');
+    }
+    
+    public function updatePrescription(Request $request, Prescription $prescription)
+    {
+        // Sprawdź czy to recepta z wizyty tego lekarza
+        if ($prescription->visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tej recepty.');
+        }
+        
+        $validated = $request->validate([
+            'medication_name' => 'required|string|max:255',
+            'medication_code' => 'nullable|string|max:50',
+            'dosage' => 'nullable|string|max:500',
+            'quantity' => 'required|integer|min:1',
+            'is_refundable' => 'required|boolean',
+        ]);
+        
+        $prescription->update($validated);
+        
+        return redirect()->back()->with('success', 'Recepta została zaktualizowana.');
+    }
+    
+    public function destroyPrescription(Prescription $prescription)
+    {
+        // Sprawdź czy to recepta z wizyty tego lekarza
+        if ($prescription->visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tej recepty.');
+        }
+        
+        $prescription->delete();
+        
+        return redirect()->back()->with('success', 'Recepta została usunięta.');
+    }
+    
+    // === SKIEROWANIA ===
+    
+    public function storeReferral(Request $request, Visit $visit)
+    {
+        // Sprawdź czy to wizyta tego lekarza
+        if ($visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tej wizyty.');
+        }
+        
+        $validated = $request->validate([
+            'type' => 'required|in:examination,specialist',
+            'referral_to' => 'required|string|max:255',
+            'diagnosis' => 'nullable|string|max:1000',
+        ]);
+        
+        $visit->referrals()->create($validated);
+        
+        return redirect()->back()->with('success', 'Skierowanie zostało wystawione.');
+    }
+    
+    public function updateReferral(Request $request, Referral $referral)
+    {
+        // Sprawdź czy to skierowanie z wizyty tego lekarza
+        if ($referral->visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tego skierowania.');
+        }
+        
+        $validated = $request->validate([
+            'type' => 'required|in:examination,specialist',
+            'referral_to' => 'required|string|max:255',
+            'diagnosis' => 'nullable|string|max:1000',
+        ]);
+        
+        $referral->update($validated);
+        
+        return redirect()->back()->with('success', 'Skierowanie zostało zaktualizowane.');
+    }
+    
+    public function destroyReferral(Referral $referral)
+    {
+        // Sprawdź czy to skierowanie z wizyty tego lekarza
+        if ($referral->visit->doctor_id !== auth()->user()->doctor->id) {
+            return redirect()->back()->with('error', 'Nie masz uprawnień do tego skierowania.');
+        }
+        
+        $referral->delete();
+        
+        return redirect()->back()->with('success', 'Skierowanie zostało usunięte.');
+    }
+    
 }

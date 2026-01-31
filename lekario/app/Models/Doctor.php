@@ -27,7 +27,6 @@ class Doctor extends Model
         return $this->hasMany(Visit::class);
     }
 
-<<<<<<< HEAD
     public function prescriptions()
     {
         return $this->hasMany(Prescription::class);
@@ -59,34 +58,6 @@ class Doctor extends Model
             foreach ([0, 30] as $minute) {
                 $slotStart = $date->copy()->setTime($hour, $minute, 0);
                 $slotEnd = $slotStart->copy()->addMinutes(30);
-=======
-public function getAvailableSlotsForDate($date)
-{
-    // Parsuj datę w strefie czasowej Europe/Warsaw
-    $date = Carbon::parse($date, 'Europe/Warsaw')->startOfDay();
-    $slots = [];
-    
-    // Godziny pracy: 8:00 - 15:00 (7 godzin)
-    $startHour = 8;
-    $endHour = 15;
-    
-    // Pobierz zajęte wizyty w tym dniu (w lokalnej strefie czasowej)
-    $bookedVisits = $this->visits()
-        ->whereDate('start_time', $date->format('Y-m-d'))
-        ->whereIn('status', ['pending', 'accepted'])
-        ->get();
-    
-    // Generuj wszystkie możliwe sloty (co 30 min)
-    for ($hour = $startHour; $hour < $endHour; $hour++) {
-        foreach ([0, 30] as $minute) {
-            $slotStart = $date->copy()->setTime($hour, $minute, 0);
-            $slotEnd = $slotStart->copy()->addMinutes(30);
-            
-            // Sprawdź czy slot jest wolny
-            $isBooked = $bookedVisits->contains(function ($visit) use ($slotStart, $slotEnd) {
-                $visitStart = Carbon::parse($visit->start_time);
-                $visitEnd = Carbon::parse($visit->end_time);
->>>>>>> 39a24c01deb4d86612cb0a74fe9c0e44d98d2cbd
                 
                 // Sprawdź czy slot jest wolny
                 $isBooked = $bookedVisits->contains(function ($visit) use ($slotStart, $slotEnd) {

@@ -11,7 +11,13 @@ use App\Http\Controllers\Patient\ReferralController as PatientReferralController
 use App\Http\Controllers\Patient\PrescriptionController as PatientPrescriptionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UsersController as AdminUsersController;
-// use App\Http\Controllers\Doctor\DoctorVisitController;
+use App\Http\Controllers\Doctor\DoctorVisitController;
+use App\Http\Controllers\Admin\SpecializationsController;
+use App\Http\Controllers\Patient\SettingsController;
+use App\Http\Controllers\Doctor\SettingsController as DoctorSettingsController;
+use App\Http\Controllers\Doctor\PatientsController as DoctorPatientsController;
+use App\Http\Controllers\Doctor\ScheduleController as DoctorScheduleController;
+
 
 
 
@@ -27,6 +33,9 @@ Route::get('/dashboard', function () {
     // Jeśli pacjent, użyj kontrolera
     if (auth()->check() && auth()->user()->patient) {
         return app(DashboardController::class)->index();
+    }
+    if (auth()->check() && auth()->user()->admin) {
+        return redirect()->route('admin.dashboard');
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -44,6 +53,13 @@ Route::middleware('auth')->group(function () {
     
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
     Route::post('/visits/{id}/cancel', [DashboardController::class, 'cancelVisit'])->name('visits.cancel');
+    
+    // Moduł "Moje Wizyty" dla pacjenta
+    Route::prefix('patient')->name('patient.')->group(function () {
+        Route::get('/visits', [PatientVisitsController::class, 'index'])->name('visits.index');
+        Route::get('/visits/{id}', [PatientVisitsController::class, 'show'])->name('visits.show');
+        Route::delete('/visits/{id}', [PatientVisitsController::class, 'cancel'])->name('visits.cancel');
+    });
     
     // Placeholder routes dla innych sekcji menu (możesz je później rozwinąć)
     Route::get('/appointments', function() { 
@@ -79,7 +95,13 @@ Route::middleware('auth')->group(function () {
     
     // Skierowania
     Route::get('/referrals', [PatientReferralController::class, 'index'])->name('referrals.index');
+
+     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::patch('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    
 });
+
 
 // Trasy dla lekarzy
 Route::middleware(['auth', 'doctor'])->prefix('doctor')->name('doctor.')->group(function () {
@@ -112,7 +134,18 @@ Route::middleware(['auth', 'doctor'])->prefix('doctor')->name('doctor.')->group(
     Route::delete('/referrals/{referral}', [DoctorVisitController::class, 'destroyReferral'])
         ->name('referrals.destroy');
     
-    Route::get('/schedule', function() { return 'Harmonogram'; })->name('schedule');
+    //pacjenci
+    Route::get('/patients', [DoctorPatientsController::class, 'index'])->name('patients.index');
+    Route::get('/patients/{patient}', [DoctorPatientsController::class, 'show'])->name('patients.show');
+    
+    // Harmonogram - NOWE
+    Route::get('/schedule', [DoctorScheduleController::class, 'index'])->name('schedule');
+    
+
+        Route::get('/settings', [DoctorSettingsController::class, 'index'])->name('settings');
+    Route::patch('/settings/password', [DoctorSettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::patch('/settings/profile', [DoctorSettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    
 });
 
 //trasy admin
@@ -120,11 +153,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     
+    // Użytkownicy
     Route::get('/users', [AdminUsersController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUsersController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}/edit', [AdminUsersController::class, 'edit'])->name('users.edit'); // NOWE
+    Route::patch('/users/{user}', [AdminUsersController::class, 'update'])->name('users.update'); // NOWE
     Route::patch('/users/{user}/status', [AdminUsersController::class, 'updateStatus'])->name('users.update-status');
     Route::post('/users/{user}/assign-role', [AdminUsersController::class, 'assignRole'])->name('users.assign-role');
     Route::delete('/users/{user}', [AdminUsersController::class, 'destroy'])->name('users.destroy');
+    
+    // Edycja lekarza 
+    Route::get('/users/{user}/edit-doctor', [AdminUsersController::class, 'editDoctor'])->name('users.edit-doctor');
+    Route::patch('/users/{user}/update-doctor', [AdminUsersController::class, 'updateDoctor'])->name('users.update-doctor');
+    
+    // Zmiana i usuwanie roli
+    Route::patch('/users/{user}/change-role', [AdminUsersController::class, 'changeRole'])->name('users.change-role.update');
+    Route::delete('/users/{user}/remove-role', [AdminUsersController::class, 'removeRole'])->name('users.remove-role');
+    
+    // Specjalizacje
+    Route::get('/specializations', [SpecializationsController::class, 'index'])->name('specializations.index');
+    Route::get('/specializations/create', [SpecializationsController::class, 'create'])->name('specializations.create');
+    Route::post('/specializations', [SpecializationsController::class, 'store'])->name('specializations.store');
+    Route::get('/specializations/{specialization}/edit', [SpecializationsController::class, 'edit'])->name('specializations.edit');
+    Route::patch('/specializations/{specialization}', [SpecializationsController::class, 'update'])->name('specializations.update');
+    Route::delete('/specializations/{specialization}', [SpecializationsController::class, 'destroy'])->name('specializations.destroy');
 });
 
 require __DIR__.'/auth.php';

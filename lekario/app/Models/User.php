@@ -74,7 +74,6 @@ class User extends Authenticatable
     {
         return $this->hasOne(Doctor::class);
     }
-<<<<<<< HEAD
 
     public function admin()
     {
@@ -128,6 +127,4 @@ class User extends Authenticatable
     {
         $this->update(['status' => self::STATUS_INACTIVE]);
     }
-=======
->>>>>>> 39a24c01deb4d86612cb0a74fe9c0e44d98d2cbd
 }
