@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Visit;
-use App\Models\Prescription;
-use App\Models\Referral;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -25,7 +23,7 @@ class DashboardController extends Controller
             ->whereIn('status', ['pending', 'accepted'])
             ->where('start_time', '>', Carbon::now())
             ->orderBy('start_time', 'asc')
-            ->with(['doctor.user', 'doctor.specializations'])
+            ->with('doctor.user')
             ->get();
 
         // Najbliższa wizyta
@@ -53,44 +51,11 @@ class DashboardController extends Controller
                 return Carbon::parse($visit->start_time)->format('Y-m-d');
             });
 
-        // Wszystkie wizyty dla kalendarza JS (format: ['2024-01-15', '2024-01-20', ...])
-        $allVisits = Visit::where('patient_id', $patient->id)
-            ->whereIn('status', ['pending', 'accepted', 'completed'])
-            ->get()
-            ->pluck('start_time')
-            ->map(function($date) {
-                return Carbon::parse($date)->format('Y-m-d');
-            })
-            ->unique()
-            ->values()
-            ->toArray();
-
-        // Ostatnie recepty (5 najnowszych)
-        $recentPrescriptions = Prescription::whereHas('visit', function($query) use ($patient) {
-                $query->where('patient_id', $patient->id);
-            })
-            ->with('visit')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        // Ostatnie skierowania (5 najnowszych)
-        $recentReferrals = Referral::whereHas('visit', function($query) use ($patient) {
-                $query->where('patient_id', $patient->id);
-            })
-            ->with('visit')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
         return view('dashboard', compact(
             'upcomingVisits',
             'nextVisit',
             'stats',
-            'monthVisits',
-            'allVisits',
-            'recentPrescriptions',
-            'recentReferrals'
+            'monthVisits'
         ));
     }
 
@@ -108,19 +73,8 @@ class DashboardController extends Controller
             return back()->with('error', 'Nie można anulować tej wizyty');
         }
 
-        $visitTime = Carbon::parse($visit->start_time);
-        $now = Carbon::now();
-        
-        // Sprawdź czy wizyta jest w przeszłości
-        if ($visitTime->isPast()) {
-            return back()->with('error', 'Nie można anulować wizyty, która już się odbyła');
-        }
-
-        // Sprawdź czy wizyta jest za mniej niż 24 godziny
-        // diffInHours(false) - drugi parametr false sprawia, że różnica może być ujemna
-        $hoursUntilVisit = $now->diffInHours($visitTime, false);
-        
-        if ($hoursUntilVisit < 24) {
+        // Sprawdź czy wizyta nie jest za blisko (np. mniej niż 24h)
+        if (Carbon::parse($visit->start_time)->diffInHours(Carbon::now()) < 24) {
             return back()->with('error', 'Nie można anulować wizyty na mniej niż 24 godziny przed terminem');
         }
 

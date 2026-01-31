@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\Doctor\DoctorDashboardController;
+<<<<<<< HEAD
 use App\Http\Controllers\Patient\VisitsController as PatientVisitsController;
 use App\Http\Controllers\Patient\ReferralController as PatientReferralController;
 use App\Http\Controllers\Patient\PrescriptionController as PatientPrescriptionController;
@@ -20,6 +21,8 @@ use App\Http\Controllers\Doctor\ScheduleController as DoctorScheduleController;
 
 
 
+=======
+>>>>>>> 39a24c01deb4d86612cb0a74fe9c0e44d98d2cbd
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,9 +36,6 @@ Route::get('/dashboard', function () {
     // Jeśli pacjent, użyj kontrolera
     if (auth()->check() && auth()->user()->patient) {
         return app(DashboardController::class)->index();
-    }
-    if (auth()->check() && auth()->user()->admin) {
-        return redirect()->route('admin.dashboard');
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -53,13 +53,6 @@ Route::middleware('auth')->group(function () {
     
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
     Route::post('/visits/{id}/cancel', [DashboardController::class, 'cancelVisit'])->name('visits.cancel');
-    
-    // Moduł "Moje Wizyty" dla pacjenta
-    Route::prefix('patient')->name('patient.')->group(function () {
-        Route::get('/visits', [PatientVisitsController::class, 'index'])->name('visits.index');
-        Route::get('/visits/{id}', [PatientVisitsController::class, 'show'])->name('visits.show');
-        Route::delete('/visits/{id}', [PatientVisitsController::class, 'cancel'])->name('visits.cancel');
-    });
     
     // Placeholder routes dla innych sekcji menu (możesz je później rozwinąć)
     Route::get('/appointments', function() { 
@@ -90,6 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/visits/doctors-by-specialization', [VisitController::class, 'getDoctorsBySpecialization']);
     Route::post('/api/visits/available-dates', [VisitController::class, 'getAvailableDates']);
     Route::post('/api/visits/available-slots', [VisitController::class, 'getAvailableSlots']);
+<<<<<<< HEAD
 
     Route::get('/prescriptions', [PatientPrescriptionController::class, 'index'])->name('prescriptions.index');
     
@@ -100,8 +94,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
     Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     
+=======
+>>>>>>> 39a24c01deb4d86612cb0a74fe9c0e44d98d2cbd
 });
-
 
 // Trasy dla lekarzy
 Route::middleware(['auth', 'doctor'])->prefix('doctor')->name('doctor.')->group(function () {
@@ -115,6 +110,7 @@ Route::middleware(['auth', 'doctor'])->prefix('doctor')->name('doctor.')->group(
     Route::get('/visits/{visit}', [App\Http\Controllers\Doctor\DoctorVisitController::class, 'show'])->name('visits.show');
     Route::post('/visits/{visit}/complete', [App\Http\Controllers\Doctor\DoctorVisitController::class, 'complete'])->name('visits.complete');
     
+<<<<<<< HEAD
     Route::post('/visits/{visit}/prescription', [DoctorDashboardController::class, 'storePrescription'])->name('visits.prescription.store');
     Route::post('/visits/{visit}/referral', [DoctorDashboardController::class, 'storeReferral'])->name('visits.referral.store');
 
@@ -179,4 +175,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/specializations/{specialization}', [SpecializationsController::class, 'destroy'])->name('specializations.destroy');
 });
 
+=======
+    Route::get('/schedule', function() { return 'Harmonogram'; })->name('schedule');
+});
+
+>>>>>>> 39a24c01deb4d86612cb0a74fe9c0e44d98d2cbd
 require __DIR__.'/auth.php';

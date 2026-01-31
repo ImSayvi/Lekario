@@ -15,14 +15,4 @@ class Patient extends Model
     public function visits() {
         return $this->hasMany(Visit::class);
     }
-    
-    public function prescriptions()
-    {
-        return $this->hasMany(Prescription::class);
-    }
-
-    public function referrals()
-    {
-        return $this->hasMany(Referral::class);
-    }
 }
