@@ -12,6 +12,11 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // Stałe statusów
+    const STATUS_VERIFY = 'VERIFY';
+    const STATUS_ACTIVE = 'ACTIVE';
+    const STATUS_INACTIVE = 'INACTIVE';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,11 +29,8 @@ class User extends Authenticatable
         'phone',
         'pesel',
         'password',
+        'status', 
     ];
-
-    const STATUS_VERIFY = 'VERIFY';
-    const STATUS_ACTIVE = 'ACTIVE';
-    const STATUS_INACTIVE = 'INACTIVE';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -86,14 +88,17 @@ class User extends Authenticatable
         return $this->admin !== null;
     }
 
+    /**
+     * Sprawdź czy użytkownik może się zalogować
+     */
     public function canLogin(): bool
-        {
-            return $this->status === self::STATUS_ACTIVE;
-        }
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
 
     /**
- * Sprawdź czy użytkownik czeka na weryfikację
- */
+     * Sprawdź czy użytkownik czeka na weryfikację
+     */
     public function isPending(): bool
     {
         return $this->status === self::STATUS_VERIFY;

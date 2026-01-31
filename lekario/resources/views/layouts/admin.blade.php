@@ -26,6 +26,9 @@
                             <a href="{{ route('admin.users.index') }}" class="text-white hover:text-red-200 px-3 py-2 rounded-md text-sm font-medium transition">
                                 Użytkownicy
                             </a>
+                            <a href="{{ route('admin.specializations.index') }}" class="text-white hover:text-red-200 px-3 py-2 rounded-md text-sm font-medium transition">
+                                Specjalizacje
+                            </a>
                         </div>
                     </div>
                     <div class="flex items-center">

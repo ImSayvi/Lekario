@@ -7,7 +7,10 @@ use Carbon\Carbon;
 
 class Doctor extends Model
 {
-    protected $fillable = ['user_id'];
+    protected $fillable = [
+        'user_id',
+        'name', 
+    ];
 
     public function user()
     {
@@ -34,73 +37,73 @@ class Doctor extends Model
         return $this->hasMany(Referral::class);
     }
 
-public function getAvailableSlotsForDate($date)
-{
-    // Parsuj datę w strefie czasowej Europe/Warsaw
-    $date = Carbon::parse($date, 'Europe/Warsaw')->startOfDay();
-    $slots = [];
-    
-    // Godziny pracy: 8:00 - 15:00 (7 godzin)
-    $startHour = 8;
-    $endHour = 15;
-    
-    // Pobierz zajęte wizyty w tym dniu (w lokalnej strefie czasowej)
-    $bookedVisits = $this->visits()
-        ->whereDate('start_time', $date->format('Y-m-d'))
-        ->whereIn('status', ['pending', 'accepted'])
-        ->get();
-    
-    // Generuj wszystkie możliwe sloty (co 30 min)
-    for ($hour = $startHour; $hour < $endHour; $hour++) {
-        foreach ([0, 30] as $minute) {
-            $slotStart = $date->copy()->setTime($hour, $minute, 0);
-            $slotEnd = $slotStart->copy()->addMinutes(30);
-            
-            // Sprawdź czy slot jest wolny
-            $isBooked = $bookedVisits->contains(function ($visit) use ($slotStart, $slotEnd) {
-                $visitStart = Carbon::parse($visit->start_time);
-                $visitEnd = Carbon::parse($visit->end_time);
+    public function getAvailableSlotsForDate($date)
+    {
+        // Parsuj datę w strefie czasowej Europe/Warsaw
+        $date = Carbon::parse($date, 'Europe/Warsaw')->startOfDay();
+        $slots = [];
+        
+        // Godziny pracy: 8:00 - 15:00 (7 godzin)
+        $startHour = 8;
+        $endHour = 15;
+        
+        // Pobierz zajęte wizyty w tym dniu (w lokalnej strefie czasowej)
+        $bookedVisits = $this->visits()
+            ->whereDate('start_time', $date->format('Y-m-d'))
+            ->whereIn('status', ['pending', 'accepted'])
+            ->get();
+        
+        // Generuj wszystkie możliwe sloty (co 30 min)
+        for ($hour = $startHour; $hour < $endHour; $hour++) {
+            foreach ([0, 30] as $minute) {
+                $slotStart = $date->copy()->setTime($hour, $minute, 0);
+                $slotEnd = $slotStart->copy()->addMinutes(30);
                 
-                // Slot jest zajęty tylko jeśli NAKŁADA SIĘ na wizytę
-                // Slot 8:30-9:00 NIE nakłada się na wizytę 8:00-8:30
-                return ($slotStart < $visitEnd && $slotEnd > $visitStart);
-            });
-            
-            if (!$isBooked) {
-                $slots[] = [
-                    'start' => $slotStart->format('H:i'),
-                    'end' => $slotEnd->format('H:i'),
-                    'datetime' => $slotStart,
-                ];
+                // Sprawdź czy slot jest wolny
+                $isBooked = $bookedVisits->contains(function ($visit) use ($slotStart, $slotEnd) {
+                    $visitStart = Carbon::parse($visit->start_time);
+                    $visitEnd = Carbon::parse($visit->end_time);
+                    
+                    // Slot jest zajęty tylko jeśli NAKŁADA SIĘ na wizytę
+                    // Slot 8:30-9:00 NIE nakłada się na wizytę 8:00-8:30
+                    return ($slotStart < $visitEnd && $slotEnd > $visitStart);
+                });
+                
+                if (!$isBooked) {
+                    $slots[] = [
+                        'start' => $slotStart->format('H:i'),
+                        'end' => $slotEnd->format('H:i'),
+                        'datetime' => $slotStart,
+                    ];
+                }
             }
         }
+        
+        return $slots;
     }
-    
-    return $slots;
-}
 
-public function getAvailableDates($daysAhead = 30)
-{
-    $availableDates = [];
-    // Użyj Carbon::now() zamiast Carbon::today() dla lepszej kontroli strefy czasowej
-    $today = Carbon::now('Europe/Warsaw')->startOfDay();
-    
-    for ($i = 0; $i < $daysAhead; $i++) {
-        $date = $today->copy()->addDays($i);
+    public function getAvailableDates($daysAhead = 30)
+    {
+        $availableDates = [];
+        // Użyj Carbon::now() zamiast Carbon::today() dla lepszej kontroli strefy czasowej
+        $today = Carbon::now('Europe/Warsaw')->startOfDay();
         
-        // Pomijamy weekendy (sobota = 6, niedziela = 0)
-        if ($date->dayOfWeek === 0 || $date->dayOfWeek === 6) {
-            continue;
+        for ($i = 0; $i < $daysAhead; $i++) {
+            $date = $today->copy()->addDays($i);
+            
+            // Pomijamy weekendy (sobota = 6, niedziela = 0)
+            if ($date->dayOfWeek === 0 || $date->dayOfWeek === 6) {
+                continue;
+            }
+            
+            // Sprawdź czy są dostępne sloty
+            $slots = $this->getAvailableSlotsForDate($date);
+            
+            if (count($slots) > 0) {
+                $availableDates[] = $date->format('Y-m-d');
+            }
         }
         
-        // Sprawdź czy są dostępne sloty
-        $slots = $this->getAvailableSlotsForDate($date);
-        
-        if (count($slots) > 0) {
-            $availableDates[] = $date->format('Y-m-d');
-        }
+        return $availableDates;
     }
-    
-    return $availableDates;
-}
 }

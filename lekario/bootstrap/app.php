@@ -11,6 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Dodaj middleware do grupy 'web' - BĘDZIE DZIAŁAĆ DLA WSZYSTKICH AUTENTYKOWANYCH
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\EnsureUserIsActive::class,
+        ]);
+        
+        // Aliasy dla middleware
         $middleware->alias([
             'check.visit.limit' => \App\Http\Middleware\CheckVisitLimit::class,
             'doctor' => \App\Http\Middleware\EnsureUserIsDoctor::class,
